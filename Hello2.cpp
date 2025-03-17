@@ -10,7 +10,7 @@ void printText(const std::string& text) {
 
 void printStuff() {
     int file_size;
-    int file_size2 = 0;
+    int file_size2 = 1;
     std::cout << file_size << std::endl;
     std::cout << file_size2 << std::endl;
 }
