@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 /*Richfield needs a new course scheduling system. As an outsourced Junior C++ developer, you have been tasked to develop an 
 intelligent system to optimize class schedules, room allocations, and student registrations.
 
@@ -41,10 +42,24 @@ public:
 };
 
 // Student: Include student ID, major, list of enrolled courses, and academic year.
+=======
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// Forward declaration
+class Course;
+
+// Student Class
+typedef unsigned int uint;
+>>>>>>> Stashed changes
 class Student {
 private:
     string studentID;
     string major;
+<<<<<<< Updated upstream
     vector<string> enrolledCourses;
     int academicYear;
 
@@ -113,3 +128,137 @@ int main() {
     return 0;
 }
 
+=======
+    uint academicYear;
+    vector<Course*> enrolledCourses;
+
+public:
+    Student(const string& id, const string& major, uint year) 
+        : studentID(id), major(major), academicYear(year) {}
+
+    void enroll(Course* course);
+    void display() const;
+};
+
+// Room Class
+class Room {
+private:
+    string roomNumber;
+    string type;
+    uint capacity;
+    vector<string> availableTimeSlots;
+    vector<string> specialEquipment;
+
+public:
+    Room(const string& number, const string& type, uint cap, const vector<string>& slots, const vector<string>& equipment = {})
+        : roomNumber(number), type(type), capacity(cap), availableTimeSlots(slots), specialEquipment(equipment) {}
+    
+    void display() const;
+};
+
+// Course Class
+class Course {
+private:
+    string courseCode;
+    string name;
+    string requiredRoomType;
+    uint maxCapacity;
+    vector<Student*> enrolledStudents;
+    vector<string> scheduledTimeSlots;
+    Room* assignedRoom;
+
+public:
+    Course(const string& code, const string& name, const string& roomType, uint capacity)
+        : courseCode(code), name(name), requiredRoomType(roomType), maxCapacity(capacity), assignedRoom(nullptr) {}
+    
+    bool enrollStudent(Student* student);
+    void assignRoom(Room* room);
+    void display() const;
+};
+
+// Implementation of Student methods
+void Student::enroll(Course* course) {
+    enrolledCourses.push_back(course);
+}
+
+void Student::display() const {
+    cout << "Student ID: " << studentID << " | Major: " << major << " | Year: " << academicYear << endl;
+    cout << "Enrolled Courses: ";
+    for (const auto& course : enrolledCourses) {
+        cout << course->getCode() << " ";
+    }
+    cout << endl;
+}
+
+// Implementation of Room methods
+void Room::display() const {
+    cout << "Room Number: " << roomNumber << " | Type: " << type << " | Capacity: " << capacity << endl;
+    cout << "Available Slots: ";
+    for (const auto& slot : availableTimeSlots) {
+        cout << slot << " ";
+    }
+    cout << endl;
+    if (!specialEquipment.empty()) {
+        cout << "Special Equipment: ";
+        for (const auto& equip : specialEquipment) {
+            cout << equip << " ";
+        }
+        cout << endl;
+    }
+}
+
+// Implementation of Course methods
+bool Course::enrollStudent(Student* student) {
+    if (enrolledStudents.size() < maxCapacity) {
+        enrolledStudents.push_back(student);
+        student->enroll(this);
+        return true;
+    }
+    return false;
+}
+
+void Course::assignRoom(Room* room) {
+    if (room->getType() == requiredRoomType) {
+        assignedRoom = room;
+    }
+}
+
+void Course::display() const {
+    cout << "Course: " << courseCode << " - " << name << " | Max Capacity: " << maxCapacity << endl;
+    cout << "Scheduled Slots: ";
+    for (const auto& slot : scheduledTimeSlots) {
+        cout << slot << " ";
+    }
+    cout << endl;
+    if (assignedRoom) {
+        cout << "Assigned Room: " << assignedRoom->getRoomNumber() << endl;
+    }
+}
+
+// Main function for testing
+int main() {
+    Student student1("S123", "Computer Science", 2);
+    Student student2("S456", "Mathematics", 1);
+    
+    Course course1("CS101", "Data Structures", "Lab", 30);
+    Course course2("MTH201", "Calculus", "Lecture Hall", 50);
+    
+    Room room1("A101", "Lab", 30, {"08:00-10:00", "10:00-12:00"}, {"Computers", "Projector"});
+    Room room2("B202", "Lecture Hall", 100, {"08:00-10:00", "12:00-14:00"});
+    
+    course1.enrollStudent(&student1);
+    course2.enrollStudent(&student2);
+    
+    course1.assignRoom(&room1);
+    course2.assignRoom(&room2);
+    
+    student1.display();
+    student2.display();
+    course1.display();
+    course2.display();
+    room1.display();
+    room2.display();
+    
+    return 0;
+}
+>>>>>>> Stashed changes
