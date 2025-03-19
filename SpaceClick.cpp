@@ -20,19 +20,19 @@ int main() {
             input.type = INPUT_MOUSE;
             input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
             SendInput(1, &input, sizeof(INPUT));
-
+ 
             input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
             SendInput(1, &input, sizeof(INPUT));
 
             // Add a small delay to prevent multiple clicks from a single press
             Sleep(200);
         }
-
+ 
         // Exit the program if the ESC key is pressed
         if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
             break;
         }
-
+  
         Sleep(10); // Small delay to reduce CPU usage
     }
 
