@@ -1,11 +1,9 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <memory>
-#include <algorithm>
-#include <map>
+#include <iostream>  // For input/output in the main programme
+#include <string>    // For using the string class in the classes
+#include <vector>    // For using the vector container in the classes
+#include <map>       // For using the map container in generate report
 
-using namespace std;
+using namespace std; // Using the standard namespace
 
 // Base class Resource
 class Resource {

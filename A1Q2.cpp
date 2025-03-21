@@ -1,125 +1,96 @@
-/*Richfield needs a new course scheduling system. As an outsourced Junior C++ developer, you have been tasked to develop an 
-intelligent system to optimize class schedules, room allocations, and student registrations.
-
-Design and implement the following classes: 
-o Course: Include attributes for course code, name, required room type, maximum capacity, enrolled students, 
-    and scheduled time slots.
-o Student: Include student ID, major, list of enrolled courses, and academic year.
-o Room: Include room number, type, capacity, available time slots, and any special equipment.
-
-• Implement a priority queue to manage course registration requests. The queue should prioritize based on the student's academic 
-    year, core courses for their major, and request timestamp.
-• Develop a schedule optimization algorithm that:
-    o Processes registration requests from the priority queue o Assigns courses to appropriate rooms based on type and 
-        capacity o Resolves scheduling conflicts o Balances class sizes
-    o Generates individual student schedules*/
-
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <queue>
 #include <tuple>
-#include <chrono>
+#include <ctime>
 
 using namespace std;
 
-// Course: Include attributes for course code, name, required room type, maximum capacity, enrolled students, 
-// and scheduled time slots.
 class Course {
-private:
+public:
     string courseCode;
     string name;
-    string requiredRoomType;
+    string roomType;
     int maxCapacity;
-    vector<string> enrolledStudents;
-    vector<string> scheduledTimeSlots;
+    vector<string> enrolledStudents; // List of student IDs
+    vector<string> scheduledTimeSlots; 
 
-public:
-    Course(string code, string name, string roomType, int capacity)
-        : courseCode(code), name(name), requiredRoomType(roomType), maxCapacity(capacity) {}
-
-    string getCourseCode() const { return courseCode; }
-    string getRequiredRoomType() const { return requiredRoomType; }
-    int getMaxCapacity() const { return maxCapacity; }
+    Course(const string& code, const string& courseName, const string& roomType, int capacity)
+        : courseCode(code), name(courseName), roomType(roomType), maxCapacity(capacity) {}
 };
 
-// Student: Include student ID, major, list of enrolled courses, and academic year.
 class Student {
-private:
+public:
     string studentID;
     string major;
-    vector<string> enrolledCourses;
+    vector<string> enrolledCourses; // List of course codes
     int academicYear;
 
-public:
-    Student(string id, string maj, int year)
-        : studentID(id), major(maj), academicYear(year) {}
-
-    int getAcademicYear() const { return academicYear; }
-    string getMajor() const { return major; }
+    Student(const string& id, const string& studentMajor, int year)
+        : studentID(id), major(studentMajor), academicYear(year) {}
 };
 
-// Room: Include room number, type, capacity, available time slots, and any special equipment.
 class Room {
-private:
+public:
     string roomNumber;
     string type;
     int capacity;
-    vector<string> availableTimeSlots;
-    vector<string> specialEquipment;
+    vector<string> availableTimeSlots; 
+    vector<string> specialEquipment; 
 
-public:
-    Room(string number, string type, int cap, vector<string> slots, vector<string> equipment = {})
-        : roomNumber(number), type(type), capacity(cap), availableTimeSlots(slots), specialEquipment(equipment) {}
-
-    string getType() const { return type; }
-    int getCapacity() const { return capacity; }
+    Room(const string& number, const string& roomType, int roomCapacity)
+        : roomNumber(number), type(roomType), capacity(roomCapacity) {}
 };
 
-// Implement a priority queue to manage course registration requests. The queue should prioritize based on the student's academic 
-// year, core courses for their major, and request timestamp.
-
+// Struct to represent a course registration request
 struct RegistrationRequest {
-    Student student;
-    Course course;
-    std::chrono::time_point<std::chrono::system_clock> timestamp;
+    string studentID;
+    string courseCode;
+    int academicYear;
+    bool isCoreCourse;
+    time_t timestamp;
 
-    bool operator<(const RegistrationRequest& other) const {
-        // Prioritize by academic year (higher is better)
-        if (student.getAcademicYear() != other.student.getAcademicYear()) {
-            return student.getAcademicYear() < other.student.getAcademicYear();
-        }
-        // Prioritize core courses for their major (assuming core courses have a specific naming convention or list)
-        bool isCoreCourse = (course.getCourseCode().find(student.getMajor()) != std::string::npos);
-        bool isOtherCoreCourse = (other.course.getCourseCode().find(other.student.getMajor()) != std::string::npos);
-        if (isCoreCourse != isOtherCoreCourse) {
-            return !isCoreCourse;
-        }
-        // Prioritize by request timestamp (earlier is better)
-        return timestamp > other.timestamp;
+    RegistrationRequest(const string& student, const string& course, int year, bool core, time_t time)
+        : studentID(student), courseCode(course), academicYear(year), isCoreCourse(core), timestamp(time) {}
+};
+
+// Comparator for the priority queue
+struct CompareRequests {
+    bool operator()(const RegistrationRequest& a, const RegistrationRequest& b) {
+        // Higher academic year gets higher priority
+        if (a.academicYear != b.academicYear)
+            return a.academicYear < b.academicYear;
+
+        // Core courses get higher priority
+        if (a.isCoreCourse != b.isCoreCourse)
+            return !a.isCoreCourse;
+
+        // Earlier timestamps get higher priority
+        return a.timestamp > b.timestamp;
     }
 };
 
-std::priority_queue<RegistrationRequest> registrationQueue;
-
-void addRegistrationRequest(const Student& student, const Course& course) {
-    RegistrationRequest request{student, course, std::chrono::system_clock::now()};
-    registrationQueue.push(request);
-}
-
 int main() {
-    // Example usage
-    Student student1{"S001", "CS", 2};
-    Course course1{"CS101", "Intro to Computer Science", "Lecture Hall", 100};
-    addRegistrationRequest(student1, course1);
+    // Priority queue to manage registration requests
+    priority_queue<RegistrationRequest, vector<RegistrationRequest>, CompareRequests> registrationQueue;
 
-    // Process registration requests
+    // Example data
+    time_t now = time(0);
+    registrationQueue.push(RegistrationRequest("S001", "CS101", 3, true, now - 10)); // Core course, junior
+    registrationQueue.push(RegistrationRequest("S002", "CS102", 4, false, now - 5)); // Non-core course, senior
+    registrationQueue.push(RegistrationRequest("S003", "CS103", 2, true, now - 20)); // Core course, sophomore
+
+    // Process the registration requests
     while (!registrationQueue.empty()) {
-        RegistrationRequest request = registrationQueue.top();
+        RegistrationRequest req = registrationQueue.top();
         registrationQueue.pop();
-        // Process the request
-        cout << "Processing registration for student with academic year " << request.student.getAcademicYear()
-             << " for course " << request.course.getCourseCode() << endl;
+        cout << "Processing request: StudentID=" << req.studentID
+             << ", CourseCode=" << req.courseCode
+             << ", AcademicYear=" << req.academicYear
+             << ", IsCoreCourse=" << (req.isCoreCourse ? "Yes" : "No")
+             << ", Timestamp=" << req.timestamp << endl;
     }
 
     return 0;
