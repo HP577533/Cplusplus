@@ -1,48 +1,99 @@
 #include <iostream>
-#include <unordered_map>
-#include <vector>
 #include <string>
+#include <vector>
 
-class ClubHub {
+using namespace std;
+
+class Club; // Forward declaration
+
+class Student {
 private:
-    // Adjacency list to represent the graph
-    std::unordered_map<std::string, std::vector<std::string>> adjList;
+    string firstname;
+    string lastname;
+    vector<Club*> clubs;
 
 public:
-    // Function to add a new student to the system
-    void addStudent(const std::string& studentName) {
-        // Check if the student already exists
-        if (adjList.find(studentName) == adjList.end()) {
-            adjList[studentName] = {}; // Add the student with an empty list of connections
-            std::cout << "Student \"" << studentName << "\" added to the system.\n";
-        } else {
-            std::cout << "Student \"" << studentName << "\" already exists in the system.\n";
-        }
+    Student(const string& firstname, const string& lastname) 
+        : firstname(firstname), lastname(lastname) {}
+
+    string getFirstName() const {
+        return firstname;
     }
 
-    // Function to display all students and their connections
-    void displayStudents() const {
-        std::cout << "ClubHub Students and Connections:\n";
-        for (const auto& pair : adjList) {
-            std::cout << pair.first << ": ";
-            for (const auto& connection : pair.second) {
-                std::cout << connection << " ";
-            }
-            std::cout << "\n";
-        }
+    string getLastName() const {
+        return lastname;
+    }
+
+    string getFullName() const {
+        return firstname + " " + lastname;
+    }
+
+    void addClub(Club* club) {
+        clubs.push_back(club);
     }
 };
 
-int main() {
-    ClubHub clubHub;
+class Club {
+private:
+    string name;
+    vector<Student*> members;
 
-    // Adding students to the system
-    clubHub.addStudent("Alice");
-    clubHub.addStudent("Bob");
-    clubHub.addStudent("Charlie");
+public:
+    const vector<Student*>& getMembers() const {
+        return members;
+    }
 
-    // Displaying all students
-    clubHub.displayStudents();
+    Club(const string& name) : name(name) {}
 
-    return 0;
+    string getName() const {
+        return name;
+    }
+
+    void addMember(Student* student) {
+        members.push_back(student);
+    }
+};
+
+// Add a new student to the system
+void addStudent(const string& firstname, const string& lastname) {
+    Student* newStudent = new Student(firstname, lastname);
+    cout << "Student " << firstname << " " << lastname << " added." << endl;
+}
+
+// Create a new club
+void createClub(const string& name) {
+    Club* newClub = new Club(name);
+    cout << "Club " << name << " created." << endl;
+}
+
+// Add a student to a club
+void addStudentToClub(Student* student, Club* club) {
+    club->addMember(student);
+    student->addClub(club);
+    cout << "Student " << student->getFullName() << " added to club " << club->getName() << "." << endl;
+}
+
+// Remove a student from a club
+void removeStudentFromClub(Student* student, Club* club) {
+    auto it = find(club->getMembers().begin(), club->getMembers().end(), student);
+    if (it != club->getMembers().end()) {
+        club->getMembers().erase(it);
+        cout << "Student " << student->getFullName() << " removed from club " << club->getName() << "." << endl;
+    } else {
+        cout << "Student not found in the club." << endl;
+    }
+}
+
+// A function to find all clubs a student is a member of
+vector<Club*> findClubsByStudent(const string& firstname, const string& lastname) {
+    vector<Club*> clubs;
+    // Implementation depends on how students and clubs are stored globally
+    return clubs;
+}
+
+// A function to find all students who are in a specific club
+vector<Student*> findStudentsByClub(const string& clubName) {
+    vector<Student*> students;
+    // Implementation depends on how students and clubs are stored globally
+    return students;
 }

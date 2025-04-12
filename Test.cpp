@@ -1,62 +1,99 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
 
 using namespace std;
 
-class Course {
-public:
-    string courseCode;
-    string name;
-    string roomType;
-    int maxCapacity;
-    vector<string> enrolledStudents; // List of student IDs
-    vector<string> scheduledTimeSlots; 
-
-    Course(const string& code, const string& courseName, const string& roomType, int capacity)
-        : courseCode(code), name(courseName), roomType(roomType), maxCapacity(capacity) {}
-};
+class Club; // Forward declaration
 
 class Student {
-public:
-    string studentID;
-    string major;
-    vector<string> enrolledCourses; // List of course codes
-    int academicYear;
+private:
+    string firstname;
+    string lastname;
+    vector<Club*> clubs;
 
-    Student(const string& id, const string& studentMajor, int year)
-        : studentID(id), major(studentMajor), academicYear(year) {}
+public:
+    Student(const string& firstname, const string& lastname) 
+        : firstname(firstname), lastname(lastname) {}
+
+    string getFirstName() const {
+        return firstname;
+    }
+
+    string getLastName() const {
+        return lastname;
+    }
+
+    string getFullName() const {
+        return firstname + " " + lastname;
+    }
+
+    void addClub(Club* club) {
+        clubs.push_back(club);
+    }
 };
 
-class Room {
-public:
-    string roomNumber;
-    string type;
-    int capacity;
-    vector<string> availableTimeSlots; 
-    vector<string> specialEquipment; 
+class Club {
+private:
+    string name;
+    vector<Student*> members;
 
-    Room(const string& number, const string& roomType, int roomCapacity)
-        : roomNumber(number), type(roomType), capacity(roomCapacity) {}
+public:
+    const vector<Student*>& getMembers() const {
+        return members;
+    }
+
+    Club(const string& name) : name(name) {}
+
+    string getName() const {
+        return name;
+    }
+
+    void addMember(Student* student) {
+        members.push_back(student);
+    }
 };
 
-int main() {
-    // Example usage
-    Course course1("CS101", "Introduction to Programming", "Computer Lab", 30);
-    course1.scheduledTimeSlots.push_back("Monday 10:00-12:00");
-    course1.enrolledStudents.push_back("S12345");
+// Add a new student to the system
+void addStudent(const string& firstname, const string& lastname) {
+    Student* newStudent = new Student(firstname, lastname);
+    cout << "Student " << firstname << " " << lastname << " added." << endl;
+}
 
-    Student student1("S12345", "Computer Science", 1);
-    student1.enrolledCourses.push_back("CS101");
+// Create a new club
+void createClub(const string& name) {
+    Club* newClub = new Club(name);
+    cout << "Club " << name << " created." << endl;
+}
 
-    Room room1("R101", "Computer Lab", 30);
-    room1.availableTimeSlots.push_back("Monday 10:00-12:00");
-    room1.specialEquipment.push_back("Projector");
+// Add a student to a club
+void addStudentToClub(Student* student, Club* club) {
+    club->addMember(student);
+    student->addClub(club);
+    cout << "Student " << student->getFullName() << " added to club " << club->getName() << "." << endl;
+}
 
-    cout << "Course: " << course1.name << ", Room Type: " << course1.roomType << endl;
-    cout << "Student: " << student1.studentID << ", Major: " << student1.major << endl;
-    cout << "Room: " << room1.roomNumber << ", Type: " << room1.type << endl;
+// Remove a student from a club
+void removeStudentFromClub(Student* student, Club* club) {
+    auto it = find(club->getMembers().begin(), club->getMembers().end(), student);
+    if (it != club->getMembers().end()) {
+        club->getMembers().erase(it);
+        cout << "Student " << student->getFullName() << " removed from club " << club->getName() << "." << endl;
+    } else {
+        cout << "Student not found in the club." << endl;
+    }
+}
 
-    return 0;
+// A function to find all clubs a student is a member of
+vector<Club*> findClubsByStudent(const string& firstname, const string& lastname) {
+    vector<Club*> clubs;
+    // Implementation depends on how students and clubs are stored globally
+    return clubs;
+}
+
+// A function to find all students who are in a specific club
+vector<Student*> findStudentsByClub(const string& clubName) {
+    vector<Student*> students;
+    // Implementation depends on how students and clubs are stored globally
+    return students;
 }
