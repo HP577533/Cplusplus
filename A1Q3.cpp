@@ -43,6 +43,10 @@ public:
         return members;
     }
 
+    vector<Student*>& getMembers() {
+        return members;
+    }
+
     Club(const string& name) : name(name) {}
 
     string getName() const {

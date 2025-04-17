@@ -1,99 +1,54 @@
 #include <iostream>
-#include <string>
-#include <vector>
+#include <list>
 
 using namespace std;
 
-class Club; // Forward declaration
-
-class Student {
+class Graph {
 private:
-    string firstname;
-    string lastname;
-    vector<Club*> clubs;
+    int vertices; 
+    list<int>* adjList; 
 
 public:
-    Student(const string& firstname, const string& lastname) 
-        : firstname(firstname), lastname(lastname) {}
-
-    string getFirstName() const {
-        return firstname;
+    // Constructor to initialize the graph with a given number of vertices
+    Graph(int v) {
+        vertices = v;
+        adjList = new list<int>[v]; // Create an array of lists
     }
 
-    string getLastName() const {
-        return lastname;
+    void addEdge(int u, int v) {
+        adjList[u].push_back(v); // Add edge to the adjacency list
+        adjList[v].push_back(u); // For undirected graph, add edge in both directions
     }
 
-    string getFullName() const {
-        return firstname + " " + lastname;
+    void display() {
+        for (int i = 0; i < vertices; i++) {
+            cout << "Vertex " << i << ": ";
+            for (int v : adjList[i]) {
+                cout << v << " ";
+            }
+            cout << endl;
+        }
     }
 
-    void addClub(Club* club) {
-        clubs.push_back(club);
+    ~Graph() {
+        delete[] adjList; // Clean up memory
     }
+
 };
 
-class Club {
-private:
-    string name;
-    vector<Student*> members;
+int main() {
+    Graph g(5); // Create a graph with 5 vertices
+    
+    g.addEdge(0, 1);
+    g.addEdge(0, 4);
+    g.addEdge(1, 2);
+    g.addEdge(1, 3);
+    g.addEdge(1, 4);
+    g.addEdge(2, 3);
+    g.addEdge(3, 4);
 
-public:
-    const vector<Student*>& getMembers() const {
-        return members;
-    }
+    cout << "Adjacency List of the Graph:" << endl;
+    g.display(); // Display the adjacency list
 
-    Club(const string& name) : name(name) {}
-
-    string getName() const {
-        return name;
-    }
-
-    void addMember(Student* student) {
-        members.push_back(student);
-    }
-};
-
-// Add a new student to the system
-void addStudent(const string& firstname, const string& lastname) {
-    Student* newStudent = new Student(firstname, lastname);
-    cout << "Student " << firstname << " " << lastname << " added." << endl;
-}
-
-// Create a new club
-void createClub(const string& name) {
-    Club* newClub = new Club(name);
-    cout << "Club " << name << " created." << endl;
-}
-
-// Add a student to a club
-void addStudentToClub(Student* student, Club* club) {
-    club->addMember(student);
-    student->addClub(club);
-    cout << "Student " << student->getFullName() << " added to club " << club->getName() << "." << endl;
-}
-
-// Remove a student from a club
-void removeStudentFromClub(Student* student, Club* club) {
-    auto it = find(club->getMembers().begin(), club->getMembers().end(), student);
-    if (it != club->getMembers().end()) {
-        club->getMembers().erase(it);
-        cout << "Student " << student->getFullName() << " removed from club " << club->getName() << "." << endl;
-    } else {
-        cout << "Student not found in the club." << endl;
-    }
-}
-
-// A function to find all clubs a student is a member of
-vector<Club*> findClubsByStudent(const string& firstname, const string& lastname) {
-    vector<Club*> clubs;
-    // Implementation depends on how students and clubs are stored globally
-    return clubs;
-}
-
-// A function to find all students who are in a specific club
-vector<Student*> findStudentsByClub(const string& clubName) {
-    vector<Student*> students;
-    // Implementation depends on how students and clubs are stored globally
-    return students;
-}
+    return 0;
+}   
