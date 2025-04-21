@@ -1,103 +1,141 @@
 #include <iostream>
+#include <list>
+#include <map>
 #include <string>
-#include <vector>
+#include <set>
 
 using namespace std;
 
-class Club; // Forward declaration
-
-class Student {
+class Graph {
 private:
-    string firstname;
-    string lastname;
-    vector<Club*> clubs;
+    map<string, list<string>> adjList; // Map to store adjacency list with student names
+    map<string, set<string>> clubs; // Map to store clubs and their members
+    map<string, set<string>> studentClubs; // Map to store students and their clubs
 
 public:
-    Student(const string& firstname, const string& lastname) 
-        : firstname(firstname), lastname(lastname) {}
-
-    string getFirstName() const {
-        return firstname;
+    // Add a student to the graph
+    void addStudent(const string& student) {
+        adjList[student]; // This will create an entry for the student if it doesn't exist
     }
 
-    string getLastName() const {
-        return lastname;
+    // Add a student to a club
+    void addStudentToClub(const string& student, const string& club) {
+        addStudent(student); // Ensure the student is in the graph
+        clubs[club].insert(student);
+        studentClubs[student].insert(club);
+
+        // Create edges with other club members
+        for (const auto& member : clubs[club]) {
+            if (member != student) {
+                addEdge(student, member);
+            }
+        }
     }
 
-    string getFullName() const {
-        return firstname + " " + lastname;
+    // Remove a student from a club
+    void removeStudentFromClub(const string& student, const string& club) {
+        if (clubs[club].find(student) != clubs[club].end()) {
+            clubs[club].erase(student);
+            studentClubs[student].erase(club);
+
+            // Remove edges with other club members
+            for (const auto& member : clubs[club]) {
+                adjList[student].remove(member);
+                adjList[member].remove(student);
+            }
+        }
     }
 
-    void addClub(Club* club) {
-        clubs.push_back(club);
+    // Add an edge between two students (shared club membership)
+    void addEdge(const string& student1, const string& student2) {
+        adjList[student1].push_back(student2);
+        adjList[student2].push_back(student1); // For undirected graph
+    }
+
+    // Display the adjacency list
+    void display() {
+        for (const auto& pair : adjList) {
+            cout << "Student " << pair.first << ": ";
+            for (const auto& neighbor : pair.second) {
+                cout << neighbor << " ";
+            }
+            cout << endl;
+        }
+    }
+
+    // Find all clubs a student is a member of
+    void findClubsOfStudent(const string& student) {
+        if (studentClubs.find(student) != studentClubs.end()) {
+            cout << "Clubs of student " << student << ": ";
+            for (const auto& club : studentClubs[student]) {
+                cout << club << " ";
+            }
+            cout << endl;
+        } else {
+            cout << "Student " << student << " is not a member of any clubs." << endl;
+        }
+    }
+
+    // Find all students who are in a specific club
+    void findStudentsInClub(const string& club) {
+        if (clubs.find(club) != clubs.end()) {
+            cout << "Students in club " << club << ": ";
+            for (const auto& student : clubs[club]) {
+                cout << student << " ";
+            }
+            cout << endl;
+        } else {
+            cout << "Club " << club << " does not exist or has no members." << endl;
+        }
+    }
+
+    // Add a new student to the system
+    void addNewStudent(const string& student) {
+        addStudent(student);
+        cout << "Student " << student << " added to the system." << endl;
+    }
+
+    // Create a new club
+    void createNewClub(const string& club) {
+        clubs[club]; // This will create an entry for the club if it doesn't exist
+        cout << "Club " << club << " created." << endl;
     }
 };
 
-class Club {
-private:
-    string name;
-    vector<Student*> members;
+int main() {
+    Graph g;
 
-public:
-    const vector<Student*>& getMembers() const {
-        return members;
-    }
+    // Add new students
+    g.addNewStudent("Alice");
+    g.addNewStudent("Bob");
 
-    vector<Student*>& getMembers() {
-        return members;
-    }
+    // Create new clubs
+    g.createNewClub("Chess");
+    g.createNewClub("Robotics");
 
-    Club(const string& name) : name(name) {}
+    // Add students to clubs
+    g.addStudentToClub("Alice", "Chess");
+    g.addStudentToClub("Bob", "Chess");
+    g.addStudentToClub("Charlie", "Robotics");
+    g.addStudentToClub("David", "Robotics");
+    g.addStudentToClub("Eve", "Chess");
 
-    string getName() const {
-        return name;
-    }
+    // Display the adjacency list
+    cout << "Adjacency List of the Graph:" << endl;
+    g.display();
 
-    void addMember(Student* student) {
-        members.push_back(student);
-    }
-};
+    // Find clubs of a student
+    g.findClubsOfStudent("Alice");
 
-// Add a new student to the system
-void addStudent(const string& firstname, const string& lastname) {
-    Student* newStudent = new Student(firstname, lastname);
-    cout << "Student " << firstname << " " << lastname << " added." << endl;
-}
+    // Find students in a club
+    g.findStudentsInClub("Chess");
 
-// Create a new club
-void createClub(const string& name) {
-    Club* newClub = new Club(name);
-    cout << "Club " << name << " created." << endl;
-}
+    // Remove a student from a club
+    g.removeStudentFromClub("Alice", "Chess");
 
-// Add a student to a club
-void addStudentToClub(Student* student, Club* club) {
-    club->addMember(student);
-    student->addClub(club);
-    cout << "Student " << student->getFullName() << " added to club " << club->getName() << "." << endl;
-}
+    // Display the adjacency list after removal
+    cout << "Adjacency List of the Graph after removal:" << endl;
+    g.display();
 
-// Remove a student from a club
-void removeStudentFromClub(Student* student, Club* club) {
-    auto it = find(club->getMembers().begin(), club->getMembers().end(), student);
-    if (it != club->getMembers().end()) {
-        club->getMembers().erase(it);
-        cout << "Student " << student->getFullName() << " removed from club " << club->getName() << "." << endl;
-    } else {
-        cout << "Student not found in the club." << endl;
-    }
-}
-
-// A function to find all clubs a student is a member of
-vector<Club*> findClubsByStudent(const string& firstname, const string& lastname) {
-    vector<Club*> clubs;
-    // Implementation depends on how students and clubs are stored globally
-    return clubs;
-}
-
-// A function to find all students who are in a specific club
-vector<Student*> findStudentsByClub(const string& clubName) {
-    vector<Student*> students;
-    // Implementation depends on how students and clubs are stored globally
-    return students;
+    return 0;
 }
