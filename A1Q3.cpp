@@ -3,57 +3,63 @@
 #include <map>
 #include <string>
 #include <set>
+#include <fstream>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
 class Graph {
 private:
-    map<string, list<string>> adjList; // Map to store adjacency list with student names
-    map<string, set<string>> clubs; // Map to store clubs and their members
-    map<string, set<string>> studentClubs; // Map to store students and their clubs
+    map<string, set<string>> adjList;       // Map to store adjacency list with student names
+    map<string, set<string>> clubs;         // Map to store clubs and their members
+    map<string, set<string>> studentClubs;  // Map to store students and their clubs
 
 public:
-    // Add a student to the graph
-    void addStudent(const string& student) {
-        adjList[student]; // This will create an entry for the student if it doesn't exist
+    // a.) Add a new student to the system
+    void addNewStudent(const string& student) {
+        adjList[student];
+        cout << "Student " << student << " added to the system." << endl;
     }
 
-    // Add a student to a club
+    // b.) Create a new club
+    void createNewClub(const string& club) {
+        clubs[club]; // Ensure the club exists
+        cout << "Club " << club << " created." << endl;
+    }
+
+    // c.) Add a student to a club
     void addStudentToClub(const string& student, const string& club) {
-        addStudent(student); // Ensure the student is in the graph
+        addNewStudent(student); // Ensure the student exists
+        createNewClub(club);    // Ensure the club exists
+
         clubs[club].insert(student);
         studentClubs[student].insert(club);
 
         // Create edges with other club members
         for (const auto& member : clubs[club]) {
             if (member != student) {
-                addEdge(student, member);
+                adjList[student].insert(member);
+                adjList[member].insert(student);
             }
         }
     }
 
-    // Remove a student from a club
+    // d.) Remove a student from a club
     void removeStudentFromClub(const string& student, const string& club) {
-        if (clubs[club].find(student) != clubs[club].end()) {
-            clubs[club].erase(student);
+        if (clubs[club].erase(student)) {
             studentClubs[student].erase(club);
 
             // Remove edges with other club members
             for (const auto& member : clubs[club]) {
-                adjList[student].remove(member);
-                adjList[member].remove(student);
+                adjList[student].erase(member);
+                adjList[member].erase(student);
             }
         }
     }
 
-    // Add an edge between two students (shared club membership)
-    void addEdge(const string& student1, const string& student2) {
-        adjList[student1].push_back(student2);
-        adjList[student2].push_back(student1); // For undirected graph
-    }
-
     // Display the adjacency list
-    void display() {
+    void display() const {
         for (const auto& pair : adjList) {
             cout << "Student " << pair.first << ": ";
             for (const auto& neighbor : pair.second) {
@@ -89,53 +95,209 @@ public:
         }
     }
 
-    // Add a new student to the system
-    void addNewStudent(const string& student) {
-        addStudent(student);
-        cout << "Student " << student << " added to the system." << endl;
+    // Sort students by last name
+    void displaySortedStudents() const {
+        vector<string> students;
+        for (const auto& pair : adjList) {
+            students.push_back(pair.first);
+        }
+
+        sort(students.begin(), students.end(), [](const string& a, const string& b) {
+            size_t posA = a.find_last_of(' ');
+            size_t posB = b.find_last_of(' ');
+            return a.substr(posA + 1) < b.substr(posB + 1);
+        });
+
+        cout << "Students sorted by last name:" << endl;
+        for (const auto& student : students) {
+            cout << student << endl;
+        }
     }
 
-    // Create a new club
-    void createNewClub(const string& club) {
-        clubs[club]; // This will create an entry for the club if it doesn't exist
-        cout << "Club " << club << " created." << endl;
+    // Save the current state of the system to a file
+    void saveStateToFile(const string& filename) {
+        ofstream outFile(filename);
+
+// Save students and their adjacency list
+        outFile << "Students:" << endl;
+        for (const auto& pair : adjList) {
+            outFile << pair.first << ":";
+            for (const auto& neighbor : pair.second) {
+                outFile << neighbor << ",";
+            }
+            outFile << endl;
+        }
+
+// Save clubs and their members
+        outFile << "Clubs:" << endl;
+        for (const auto& pair : clubs) {
+            outFile << pair.first << ":";
+            for (const auto& member : pair.second) {
+                outFile << member << ",";
+            }
+            outFile << endl;
+        }
+
+        outFile.close();
+        cout << "State saved to file: " << filename << endl;
+    }
+
+    // Load the state of the system from a file
+    void loadStateFromFile(const string& filename) {
+        ifstream inFile(filename);
+
+        adjList.clear();
+        clubs.clear();
+        studentClubs.clear();
+
+        string line;
+        bool isStudentSection = false, isClubSection = false;
+
+        while (getline(inFile, line)) {
+            if (line == "Students:") {
+                isStudentSection = true;
+                isClubSection = false;
+                continue;
+            } else if (line == "Clubs:") {
+                isStudentSection = false;
+                isClubSection = true;
+                continue;
+            }
+
+            if (isStudentSection) {
+                size_t colonPos = line.find(':');
+                string student = line.substr(0, colonPos);
+                string neighbors = line.substr(colonPos + 1);
+                size_t pos = 0;
+                while ((pos = neighbors.find(',')) != string::npos) {
+                    string neighbor = neighbors.substr(0, pos);
+                    adjList[student].insert(neighbor);
+                    neighbors.erase(0, pos + 1);
+                }
+            } else if (isClubSection) {
+                size_t colonPos = line.find(':');
+                string club = line.substr(0, colonPos);
+                string members = line.substr(colonPos + 1);
+                size_t pos = 0;
+                while ((pos = members.find(',')) != string::npos) {
+                    string member = members.substr(0, pos);
+                    clubs[club].insert(member);
+                    studentClubs[member].insert(club);
+                    members.erase(0, pos + 1);
+                }
+            }
+        }
+
+        inFile.close();
+        cout << "State loaded from file: " << filename << endl;
     }
 };
 
+// Load the state from a file
 int main() {
     Graph g;
 
-    // Add new students
-    g.addNewStudent("Alice");
-    g.addNewStudent("Bob");
-
-    // Create new clubs
-    g.createNewClub("Chess");
-    g.createNewClub("Robotics");
-
-    // Add students to clubs
-    g.addStudentToClub("Alice", "Chess");
-    g.addStudentToClub("Bob", "Chess");
-    g.addStudentToClub("Charlie", "Robotics");
-    g.addStudentToClub("David", "Robotics");
-    g.addStudentToClub("Eve", "Chess");
-
-    // Display the adjacency list
-    cout << "Adjacency List of the Graph:" << endl;
+// Load the state from a file
+    g.loadStateFromFile("graph_state.txt");
     g.display();
 
-    // Find clubs of a student
-    g.findClubsOfStudent("Alice");
+    int choice;
+    string student, club, filename;
 
-    // Find students in a club
-    g.findStudentsInClub("Chess");
+    do {
+        cout << "\nMenu:\n";
+        cout << "1. Add New Student\n";
+        cout << "2. Create New Club\n";
+        cout << "3. Add Student to Club\n";
+        cout << "4. Find Clubs of a Student\n";
+        cout << "5. Find Students in a Club\n";
+        cout << "6. Remove Student from Club\n";
+        cout << "7. Display Adjacency List\n";
+        cout << "8. Display Sorted Students\n";
+        cout << "9. Save State to File\n";
+        cout << "10. Load State from File\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-    // Remove a student from a club
-    g.removeStudentFromClub("Alice", "Chess");
+        switch (choice) {
+            case 1:
+                cout << "Enter student name: ";
+                cin.ignore();
+                getline(cin, student);
+                g.addNewStudent(student);
+                break;
 
-    // Display the adjacency list after removal
-    cout << "Adjacency List of the Graph after removal:" << endl;
-    g.display();
+            case 2:
+                cout << "Enter club name: ";
+                cin.ignore();
+                getline(cin, club);
+                g.createNewClub(club);
+                break;
+
+            case 3:
+                cout << "Enter student name: ";
+                cin.ignore();
+                getline(cin, student);
+                cout << "Enter club name: ";
+                getline(cin, club);
+                g.addStudentToClub(student, club);
+                break;
+
+            case 4:
+                cout << "Enter student name: ";
+                cin.ignore();
+                getline(cin, student);
+                g.findClubsOfStudent(student);
+                break;
+
+            case 5:
+                cout << "Enter club name: ";
+                cin.ignore();
+                getline(cin, club);
+                g.findStudentsInClub(club);
+                break;
+
+            case 6:
+                cout << "Enter student name: ";
+                cin.ignore();
+                getline(cin, student);
+                cout << "Enter club name: ";
+                getline(cin, club);
+                g.removeStudentFromClub(student, club);
+                break;
+
+            case 7:
+                cout << "Adjacency List of the Graph:\n";
+                g.display();
+                break;
+
+            case 8:
+                g.displaySortedStudents();
+                break;
+
+            case 9:
+                cout << "Enter filename to save state: ";
+                cin.ignore();
+                getline(cin, filename);
+                g.saveStateToFile(filename);
+                break;
+
+            case 10:
+                cout << "Enter filename to load state: ";
+                cin.ignore();
+                getline(cin, filename);
+                g.loadStateFromFile(filename);
+                break;
+
+            case 0:
+                cout << "Exiting program.\n";
+                break;
+
+            default:
+                cout << "Invalid choice. Please try again.\n";
+        }
+    } while (choice != 0);
 
     return 0;
 }

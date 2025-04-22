@@ -80,6 +80,7 @@
         "xhash": "cpp",
         "cstdarg": "cpp",
         "set": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "fstream": "cpp"
     }
 }

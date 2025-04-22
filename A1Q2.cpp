@@ -17,6 +17,8 @@ public:
     vector<string> enrolledStudents; // List of student IDs
     vector<string> scheduledTimeSlots; 
 
+    Course() : courseCode(""), name(""), roomType(""), maxCapacity(0) {}
+
     Course(const string& code, const string& courseName, const string& roomType, int capacity)
         : courseCode(code), name(courseName), roomType(roomType), maxCapacity(capacity) {}
 };
@@ -55,10 +57,10 @@ struct RegistrationRequest {
     // Custom comparator for priority queue
     bool operator<(const RegistrationRequest& other) const {
         if (academicYear != other.academicYear)
-            return academicYear < other.academicYear; // Higher academic year gets higher priority
+            return academicYear < other.academicYear;   // Higher academic year gets higher priority
         if (isCoreCourse != other.isCoreCourse)
-            return !isCoreCourse; // Core courses get higher priority
-        return timestamp > other.timestamp; // Earlier requests get higher priority
+            return !isCoreCourse;                       // Core courses get higher priority
+        return timestamp > other.timestamp;             // Earlier requests get higher priority
     }
 };
 
@@ -68,42 +70,13 @@ int main() {
     Course course1("PRG622", "Programming", "Lab", 10);
     Course course2("IS622", "Information Systems", "Lecture", 20);
     Course course3("DBI600", "Database Systems", "Lecture", 20);
-    
-    // Students:
-    Student student1("S001", "Programming", 1);
-    Student student2("S002", "Programming", 2);
-    Student student3("S003", "Information Systems", 1);
-    Student student4("S004", "Information Systems", 2);
-    Student student5("S005", "Programming", 3);
-    Student student6("S006", "Programming", 1);
-    Student student7("S007", "Information Systems", 3);
-    Student student8("S008", "Programming", 2);
-    Student student9("S009", "Information Systems", 1);
-    Student student10("S010", "Programming", 3);
-    Student student11("S011", "Information Systems", 2);
-    Student student12("S012", "Programming", 1);
-    Student student13("S013", "Information Systems", 3);
-    Student student14("S014", "Programming", 2);
-    Student student15("S015", "Information Systems", 1);
-    Student student16("S016", "Programming", 3);
-    Student student17("S017", "Information Systems", 2);
-    Student student18("S018", "Programming", 1);
-    Student student19("S019", "Information Systems", 3);
-    Student student20("S020", "Programming", 2);
-    Student student21("S021", "Information Systems", 1);
-    Student student22("S022", "Programming", 3);
-    Student student23("S023", "Database Systems", 1);
-    Student student24("S024", "Database Systems", 2);
-    Student student25("S025", "Database Systems", 3);
-    Student student26("S026", "Database Systems", 1);
-    Student student27("S027", "Database Systems", 2);
-    Student student28("S028", "Database Systems", 3);
-    Student student29("S029", "Database Systems", 1);
-    Student student30("S030", "Database Systems", 2);
 
     // Rooms:
     Room room1("R101", "Lecture", 20);
+    room1.availableTimeSlots = {"Monday 9-11", "Wednesday 14-16"};
+
     Room room2("R102", "Lab", 10);
+    room2.availableTimeSlots = {"Tuesday 10-12", "Thursday 15-17"};
 
     // Core courses for each major
     map<string, vector<string>> coreCourses = {
@@ -115,11 +88,77 @@ int main() {
     // Priority queue for registration requests
     priority_queue<RegistrationRequest> registrationQueue;
 
-    // Example registration requests
-    registrationQueue.push({"S001", "PRG622", 1, true, time(nullptr)});
-    registrationQueue.push({"S002", "IS622", 2, true, time(nullptr) - 10});
-    registrationQueue.push({"S003", "DBI600", 3, true, time(nullptr) - 20});
-    registrationQueue.push({"S004", "PRG622", 1, false, time(nullptr) - 30});
+    // Input system for student registration
+    while (true) {
+        cout << "Enter student details for registration (or type 'exit' to stop):" << endl;
+
+        string studentID, major, courseCode;
+        int academicYear;
+        cout << "Student ID: ";
+        cin >> studentID;
+        if (studentID == "exit") break;
+
+        cout << "Available Majors:" << endl;
+        map<int, string> majors = {
+            {1, "Programming"},
+            {2, "Information Systems"},
+            {3, "Database Systems"}
+        };
+
+        for (const auto& majorPair : majors) {
+            cout << majorPair.first << ". " << majorPair.second << endl;
+        }
+
+        int majorChoice;
+        cout << "Select Major (enter the number): ";
+        cin >> majorChoice;
+
+        if (majors.find(majorChoice) != majors.end()) {
+            major = majors[majorChoice];
+        } else {
+            cout << "Invalid choice. Please try again." << endl;
+            continue;
+        }
+
+        cout << "Academic Year (1-4): ";
+        cin >> academicYear;
+
+        cout << "Available courses: " << endl;
+        map<int, Course> courses = {
+            {1, course1},
+            {2, course2},
+            {3, course3}
+        };
+
+        for (const auto& coursePair : courses) {
+            cout << coursePair.first << ". " << coursePair.second.courseCode 
+             << " (" << coursePair.second.name << ")" << endl;
+        }
+
+        int courseChoice;
+        cout << "Select Course (enter the number): ";
+        cin >> courseChoice;
+
+        if (courses.find(courseChoice) != courses.end()) {
+            courseCode = courses[courseChoice].courseCode;
+        } else {
+            cout << "Invalid choice. Please try again." << endl;
+            continue;
+        }
+
+        // Create a registration request
+        RegistrationRequest req;
+        req.studentID = studentID;
+        req.courseCode = courseCode;
+        req.academicYear = academicYear;
+        req.isCoreCourse = (!coreCourses[major].empty() && coreCourses[major][0] == courseCode);
+        req.timestamp = time(nullptr);
+
+        // Add the request to the queue
+        registrationQueue.push(req);
+
+        cout << "Registration request added successfully!" << endl;
+    }
 
     // Process registration requests
     while (!registrationQueue.empty()) {
